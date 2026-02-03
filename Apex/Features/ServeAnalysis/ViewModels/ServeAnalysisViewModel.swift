@@ -26,6 +26,9 @@ class ServeAnalysisViewModel: ObservableObject {
     /// AI反馈列表
     @Published var feedbackItems: [FeedbackItem] = []
     
+    /// 阶段事件历史
+    @Published var phaseHistory: [ServePhaseEvent] = []
+    
     /// 错误信息
     @Published var errorMessage: String?
     
@@ -34,6 +37,9 @@ class ServeAnalysisViewModel: ObservableObject {
     
     /// 校准配置
     @Published var calibrationConfig: CalibrationConfig?
+    
+    /// 显示历史记录视图
+    @Published var showHistoryView = false
     
     // MARK: - Dependencies
     
@@ -138,6 +144,19 @@ class ServeAnalysisViewModel: ObservableObject {
         phaseDetector.reset()
         currentMetrics = nil
         feedbackItems.removeAll()
+        phaseHistory.removeAll()
+    }
+    
+    /// 获取历史记录
+    func loadHistory() {
+        Task {
+            do {
+                let sessions = try sessionRepository.fetchRecent(limit: 100)
+                print("✅ Loaded \(sessions.count) sessions from history")
+            } catch {
+                errorMessage = "加载历史记录失败: \(error.localizedDescription)"
+            }
+        }
     }
     
     /// 保存当前分析会话
@@ -207,12 +226,15 @@ class ServeAnalysisViewModel: ObservableObject {
                         // 获取质量分析
                         qualityAnalysis = phaseDetector.getServeQualityAnalysis()
                         
+                        // 更新阶段历史
+                        phaseHistory = phaseDetector.getPhaseHistory()
+                        
                         // 生成反馈
                         if currentPhase == .followThrough {
                             feedbackItems = feedbackGenerator.generateFeedback(
                                 metrics: metrics,
                                 phase: currentPhase,
-                                qualityAnalysis: analysis
+                                qualityAnalysis: qualityAnalysis
                             )
                         }
                     } else {

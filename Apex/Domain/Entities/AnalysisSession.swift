@@ -124,6 +124,29 @@ final class AnalysisSession {
         default: return "需改进"
         }
     }
+    
+    /// 阶段事件计数
+    var phaseEventsCount: Int {
+        phaseEvents.count
+    }
+    
+    /// 反馈项目计数
+    var feedbackItemsCount: Int {
+        feedbackItems.count
+    }
+    
+    /// 检查是否有完整的发球序列
+    var hasCompleteServe: Bool {
+        let phases = Set(phaseEvents.map { $0.phase })
+        return phases.count == 4
+    }
+    
+    /// 平均阶段持续时间
+    var averagePhaseDuration: TimeInterval {
+        guard !phaseEvents.isEmpty else { return 0 }
+        let totalDuration = phaseEvents.compactMap { $0.duration }.reduce(0, +)
+        return totalDuration / Double(phaseEvents.count)
+    }
 }
 
 /// 用户配置模型

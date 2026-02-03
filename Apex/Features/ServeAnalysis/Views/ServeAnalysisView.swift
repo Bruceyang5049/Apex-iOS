@@ -6,6 +6,8 @@ struct ServeAnalysisView: View {
     
     @ObservedObject var viewModel: ServeAnalysisViewModel
     @State private var showCalibration = false
+    @State private var showHistoryView = false
+    @State private var showFeedbackPanel = false
     
     var body: some View {
         ZStack {
@@ -28,6 +30,20 @@ struct ServeAnalysisView: View {
                 isCalibrated: viewModel.calibrationConfig?.isCalibrated ?? false
             )
             
+            // Layer 3.5: Phase Indicator (仅在分析中显示)
+            // 阶段指示器叠加层
+            if viewModel.isAnalyzing && !viewModel.phaseHistory.isEmpty {
+                VStack(alignment: .leading) {
+                    PhaseBadgeView(
+                        currentPhase: viewModel.currentPhase,
+                        quality: viewModel.qualityAnalysis?.overallScore
+                    )
+                    .padding()
+                    
+                    Spacer()
+                }
+            }
+            
             // Layer 4: Performance Overlay
             // 性能监控叠加层
             if viewModel.isAnalyzing {
@@ -47,6 +63,19 @@ struct ServeAnalysisView: View {
             VStack {
                 // 顶部工具栏
                 HStack {
+                    // 历史记录按钮
+                    Button(action: { showHistoryView = true }) {
+                        HStack {
+                            Image(systemName: "clock.arrow.circlepath")
+                            Text("历史")
+                                .font(.caption)
+                        }
+                        .padding(8)
+                        .background(Color.purple.opacity(0.8))
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                    }
+                    
                     // 校准按钮
                     Button(action: { showCalibration = true }) {
                         HStack {
@@ -64,6 +93,21 @@ struct ServeAnalysisView: View {
                     }
                     
                     Spacer()
+                    
+                    // 反馈面板按钮
+                    if viewModel.isAnalyzing && !viewModel.feedbackItems.isEmpty {
+                        Button(action: { showFeedbackPanel = true }) {
+                            HStack {
+                                Image(systemName: "bubble.right.fill")
+                                Text("\(viewModel.feedbackItems.count)")
+                                    .font(.caption)
+                            }
+                            .padding(8)
+                            .background(Color.blue.opacity(0.8))
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                        }
+                    }
                     
                     // 状态指示器
                     if viewModel.isAnalyzing {
@@ -134,13 +178,26 @@ struct ServeAnalysisView: View {
         .sheet(isPresented: $showCalibration) {
             CalibrationView(viewModel: viewModel)
         }
+        .sheet(isPresented: $showHistoryView) {
+            SessionHistoryView()
+        }
+        .sheet(isPresented: $showFeedbackPanel) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("实时反馈")
+                        .font(.headline)
+                        .padding()
+                    
+                    FeedbackBatchView(items: viewModel.feedbackItems)
+                        .padding()
+                }
+            }
+        }
         .onAppear {
             // 如果未校准，显示校准界面
             if viewModel.calibrationConfig?.isCalibrated != true {
                 showCalibration = true
             }
-        }
-            // viewModel.startAnalysis()
         }
         .onDisappear {
             viewModel.stopAnalysis()
