@@ -5,6 +5,7 @@ import SwiftUI
 struct ServeAnalysisView: View {
     
     @ObservedObject var viewModel: ServeAnalysisViewModel
+    @State private var showCalibration = false
     
     var body: some View {
         ZStack {
@@ -20,64 +21,111 @@ struct ServeAnalysisView: View {
                     .ignoresSafeArea() // 确保坐标系与预览层一致
             }
             
-            // Layer 3: UI Controls & Debug Info
+            // Layer 3: Metrics Overlay
+            // 生物力学指标叠加层
+            MetricsOverlayView(
+                metrics: viewModel.currentMetrics,
+                isCalibrated: viewModel.calibrationConfig?.isCalibrated ?? false
+            )
+            
+            // Layer 4: UI Controls & Debug Info
             // UI 控制层
             VStack {
-                // 顶部状态栏
+                // 顶部工具栏
                 HStack {
-                    if let error = viewModel.errorMessage {
-                        Text("Error: \(error)")
-                            .foregroundColor(.red)
-                            .font(.caption)
-                            .padding()
-                            .background(Color.black.opacity(0.7))
-                            .cornerRadius(8)
+                    // 校准按钮
+                    Button(action: { showCalibration = true }) {
+                        HStack {
+                            Image(systemName: "ruler")
+                            Text(viewModel.calibrationConfig?.isCalibrated == true ? "已校准" : "校准")
+                                .font(.caption)
+                        }
+                        .padding(8)
+                        .background(
+                            viewModel.calibrationConfig?.isCalibrated == true ?
+                            Color.green.opacity(0.8) : Color.orange.opacity(0.8)
+                        )
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                     }
                     
                     Spacer()
                     
-                    // Debug Info
+                    // 状态指示器
                     if viewModel.isAnalyzing {
-                        VStack(alignment: .trailing) {
-                            Text("AI Active")
-                                .foregroundColor(.green)
-                            if let pose = viewModel.currentPose {
-                                Text("Landmarks: \(pose.landmarks.count)")
-                                    .font(.caption)
-                                    .foregroundColor(.white)
-                            }
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(Color.green)
+                                .frame(width: 8, height: 8)
+                            Text("分析中")
+                                .font(.caption)
+                                .foregroundColor(.white)
                         }
-                        .padding()
-                        .background(Color.black.opacity(0.5))
+                        .padding(8)
+                        .background(Color.black.opacity(0.6))
                         .cornerRadius(8)
                     }
                 }
-                .padding(.top, 40)
+                .padding(.horizontal)
+                .padding(.top, 50)
                 
                 Spacer()
                 
-                // 底部控制栏
-                Button(action: {
-                    if viewModel.isAnalyzing {
-                        viewModel.stopAnalysis()
-                    } else {
-                        viewModel.startAnalysis()
-                    }
-                }) {
-                    Text(viewModel.isAnalyzing ? "Stop Analysis" : "Start Analysis")
-                        .font(.headline)
-                        .foregroundColor(.white)
+                // 错误提示
+                if let error = viewModel.errorMessage {
+                    Text(error)
+                        .foregroundColor(.red)
+                        .font(.caption)
                         .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(viewModel.isAnalyzing ? Color.red : Color.blue)
-                        .cornerRadius(12)
+                        .background(Color.black.opacity(0.8))
+                        .cornerRadius(8)
+                        .padding()
+                }
+                
+                // 底部控制栏
+                HStack(spacing: 16) {
+                    // 重置按钮
+                    Button(action: {
+                        viewModel.resetAnalyzer()
+                    }) {
+                        Image(systemName: "arrow.counterclockwise")
+                            .font(.title3)
+                            .foregroundColor(.white)
+                            .frame(width: 50, height: 50)
+                            .background(Color.gray.opacity(0.8))
+                            .clipShape(Circle())
+                    }
+                    
+                    // 开始/停止按钮
+                    Button(action: {
+                        if viewModel.isAnalyzing {
+                            viewModel.stopAnalysis()
+                        } else {
+                            viewModel.startAnalysis()
+                        }
+                    }) {
+                        Text(viewModel.isAnalyzing ? "停止分析" : "开始分析")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(viewModel.isAnalyzing ? Color.red : Color.blue)
+                            .cornerRadius(12)
+                    }
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 40)
             }
         }
+        .sheet(isPresented: $showCalibration) {
+            CalibrationView(viewModel: viewModel)
+        }
         .onAppear {
-            // 自动启动 (可选，或者等待用户点击)
+            // 如果未校准，显示校准界面
+            if viewModel.calibrationConfig?.isCalibrated != true {
+                showCalibration = true
+            }
+        }
             // viewModel.startAnalysis()
         }
         .onDisappear {

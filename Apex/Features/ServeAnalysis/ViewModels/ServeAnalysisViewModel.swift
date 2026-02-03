@@ -14,11 +14,19 @@ class ServeAnalysisViewModel: ObservableObject {
     /// 当前姿势估计结果
     @Published var currentPose: PoseEstimationResult?
     
+    /// 当前生物力学指标
+    @Published var currentMetrics: BiomechanicsMetrics?
+    
     /// 错误信息
     @Published var errorMessage: String?
     
     /// 是否正在分析
     @Published var isAnalyzing: Bool = false
+    
+    /// 校准配置
+    private let biomechanicsAnalyzer: BiomechanicsAnalyzer
+    private let calibrationManager: CalibrationManager
+    @Published var calibrationConfig: CalibrationConfig?
     
     // MARK: - Dependencies
     
@@ -30,9 +38,21 @@ class ServeAnalysisViewModel: ObservableObject {
     private var analysisTask: Task<Void, Never>?
     
     // MARK: - Initialization
-    
-    init(cameraManager: CameraManager = CameraManager(),
-         poseEstimator: PoseEstimatorService = MediaPipePoseEstimator()) {
+    ,
+         biomechanicsAnalyzer: BiomechanicsAnalyzer = BiomechanicsAnalyzer(),
+         calibrationManager: CalibrationManager = .shared) {
+        self.cameraManager = cameraManager
+        self.poseEstimator = poseEstimator
+        self.biomechanicsAnalyzer = biomechanicsAnalyzer
+        self.calibrationManager = calibrationManager
+        
+        // 加载校准配置
+        self.calibrationConfig = calibrationManager.loadCalibration()
+        
+        // 如果已校准，设置分析器的用户身高
+        if let config = calibrationConfig, config.isCalibrated {
+            biomechanicsAnalyzer.userHeight = config.userHeightMeters
+        }ce = MediaPipePoseEstimator()) {
         self.cameraManager = cameraManager
         self.poseEstimator = poseEstimator
     }
@@ -56,11 +76,35 @@ class ServeAnalysisViewModel: ObservableObject {
                 // 3. 开始处理帧流
                 startProcessingLoop()
                 
+        currentMetrics = nil
+    }
+    
+    /// 更新校准配置
+    func updateCalibration(heightCm: Float) {
+        let config = CalibrationConfig(userHeightCm: heightCm)
+        calibrationConfig = config
+        calibrationManager.saveCalibration(config)
+        biomechanicsAnalyzer.userHeight = config.userHeightMeters
+        print("✅ Calibration updated: \(heightCm) cm")
+    }
+    
+    /// 重置分析器 (清除滤波器历史)
+    func resetAnalyzer() {
+        biomechanicsAnalyzer.reset()
+        currentMetrics = nil
             } catch {
                 handleError(error)
                 isAnalyzing = false
-            }
-        }
+            }姿势结果
+                    self.currentPose = result
+                    
+                    // 如果检测到姿势，执行生物力学分析
+                    if !result.landmarks.isEmpty {
+                        let metrics = biomechanicsAnalyzer.analyze(poseResult: result)
+                        self.currentMetrics = metrics
+                    } else {
+                        self.currentMetrics = nil
+                    }
     }
     
     /// 停止分析

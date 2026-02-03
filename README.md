@@ -3,9 +3,48 @@
 [![Swift](https://img.shields.io/badge/Swift-5.0+-orange.svg)](https://swift.org)
 [![Platform](https://img.shields.io/badge/Platform-iOS%2015.0+-lightgrey.svg)](https://developer.apple.com/ios/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-MVP%20Development-yellow.svg)]()
+[![Status](https://img.shields.io/badge/Status-v2.0%20Development-green.svg)]()
 
 > **APEX** is an iOS application designed to democratize professional tennis coaching using advanced computer vision and biomechanics analysis.
+
+---
+
+## 🎉 v2.0 Update - Biomechanics Engine Released!
+
+**Release Date**: February 3, 2026
+
+### 🆕 What's New
+
+- ✅ **Complete Biomechanics Analysis Engine**
+    - Real-time calculation of 7 key metrics
+    - Knee flexion, hip-shoulder separation, contact height, wrist velocity
+    - 3D vector geometry and angle calculations
+
+- ✅ **One Euro Filter Smoothing System**
+    - Adaptive noise reduction for 33 landmarks
+    - Maintains low latency while eliminating jitter
+    - Configurable parameters (minCutoff, beta, derivativeCutoff)
+
+- ✅ **User Calibration System**
+    - Height-based pixel-to-meter conversion
+    - Support for metric (cm) and imperial (ft/in) units
+    - Automatic calibration using torso length reference
+    - Persistent storage via UserDefaults
+
+- ✅ **Smart Status Evaluation UI**
+    - Color-coded feedback (Green 🟢 / Yellow ⚠️ / Red 🔴)
+    - Elite performance benchmark comparison
+    - Real-time metrics overlay cards
+    - Calibration prompt interface
+
+### 🚧 Coming in v2.0 (In Progress)
+
+- **Serve Phase Detection** - Automatic recognition of preparation/loading/contact/follow-through stages
+- **AI Feedback Generation** - Natural language coaching suggestions based on metrics
+- **Data Persistence** - Session history and progress tracking with SwiftData
+- **Performance Monitoring** - FPS tracking and optimization dashboard
+
+---
 
 ## 📋 Table of Contents
 
@@ -29,7 +68,15 @@ The project follows a **Vibe Coding** philosophy: high-velocity development assi
 ## ✨ Features
 
 - **Real-time Pose Estimation**: Utilizes MediaPipe Vision Tasks for high-accuracy, low-latency body tracking.
-- **Biomechanics Feedback**: (In Progress) Instant feedback on serve technique based on elite reference models.
+- **Biomechanics Analysis**: 🆕 Real-time calculation of key metrics:
+  - Knee flexion angles (left & right)
+  - Hip-shoulder separation (power generation indicator)
+  - Contact point height
+  - Racket head velocity (wrist velocity proxy)
+  - Elbow angles and torso rotation
+- **Advanced Data Smoothing**: 🆕 One Euro Filter implementation for noise reduction while maintaining responsiveness.
+- **User Calibration**: 🆕 Height-based calibration for accurate real-world measurements.
+- **Live Metrics Display**: 🆕 Color-coded feedback with elite performance benchmarks.
 - **Privacy First**: All processing happens on-device; no video data is uploaded to the cloud.
 - **High Performance**: Optimized for Apple Neural Engine (ANE) with `AsyncStream` based concurrency.
 
@@ -51,10 +98,10 @@ The project is built using **MVVM (Model-View-ViewModel)** and **Clean Architect
 
 ## 🏁 Getting Started
 
-1.  **Clone the repository**
+1. **Clone the repository**
     ```bash
-    git clone https://github.com/your-username/apex-ios.git
-    cd apex-ios
+    git clone https://github.com/Bruceyang5049/Apex-iOS.git
+    cd Apex-iOS
     ```
 
 2.  **Install Dependencies**
@@ -78,14 +125,24 @@ The project is built using **MVVM (Model-View-ViewModel)** and **Clean Architect
 Apex/
 ├── App/                  # App Entry & DI Container
 ├── Core/                 # Utilities & Error Handling
+│   └── Filters/          # 🆕 One Euro Filter for data smoothing
 ├── Domain/               # Entities & Interfaces (Business Logic)
+│   ├── Entities/         # 🆕 BiomechanicsMetrics, PoseLandmark
+│   └── Services/         # 🆕 BiomechanicsAnalyzer, CalibrationManager
 ├── Data/                 # Concrete Implementations (MediaPipe, etc.)
 ├── Features/             # UI Modules (ServeAnalysis, etc.)
 │   └── ServeAnalysis/
-│       ├── Views/
+│       ├── Views/        # 🆕 CalibrationView, MetricsOverlayView
 │       └── ViewModels/
 └── Services/             # Infrastructure Services (Camera, etc.)
 ```
+
+## 📚 Documentation
+- [PRD v2.0](./PRD_v2.0.md) - Product Requirements Document with v2.0 roadmap
+- [Biomechanics Implementation](./BIOMECHANICS_IMPLEMENTATION.md) - Detailed technical implementation
+- [API Examples](./API_EXAMPLES.md) - Code usage examples and patterns
+- [Testing Guide](./TESTING_GUIDE.md) - Testing procedures and validation criteria
+- [PRD v1.0](./PRD.md) - Original MVP requirements (Chinese)
 
 ## 🤝 Contributing
 
