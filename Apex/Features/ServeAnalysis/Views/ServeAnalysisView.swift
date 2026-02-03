@@ -28,7 +28,21 @@ struct ServeAnalysisView: View {
                 isCalibrated: viewModel.calibrationConfig?.isCalibrated ?? false
             )
             
-            // Layer 4: UI Controls & Debug Info
+            // Layer 4: Performance Overlay
+            // 性能监控叠加层
+            if viewModel.isAnalyzing {
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        PerformanceOverlayView(monitor: viewModel.performanceMonitor)
+                            .frame(width: 200)
+                            .padding()
+                    }
+                }
+            }
+            
+            // Layer 5: UI Controls & Debug Info
             // UI 控制层
             VStack {
                 // 顶部工具栏
